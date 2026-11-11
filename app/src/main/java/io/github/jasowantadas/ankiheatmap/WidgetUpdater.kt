@@ -16,6 +16,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
+import android.view.View
 import android.widget.RemoteViews
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -25,6 +26,8 @@ object WidgetUpdater {
     const val ACTION_REFRESH = "io.github.jasowantadas.ankiheatmap.REFRESH"
     const val ACTION_SELECT = "io.github.jasowantadas.ankiheatmap.SELECT"
     const val EXTRA_DAY = "day"
+    const val ACTION_YEAR = "io.github.jasowantadas.ankiheatmap.YEAR"
+    const val EXTRA_DELTA = "delta"
     private const val ANKIDROID = "com.ichi2.anki"
     private const val FLAGS = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 
@@ -80,6 +83,36 @@ object WidgetUpdater {
         return PendingIntent.getBroadcast(context, 4, i, FLAGS)
     }
 
+    private fun yearIntent(context: Context, widgetId: Int, delta: Int): PendingIntent {
+        val i = Intent(context, HeatmapWidget::class.java)
+            .setAction(ACTION_YEAR)
+            .setData(Uri.parse("ankiheatmap://year/$widgetId/$delta"))
+            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+            .putExtra(EXTRA_DELTA, delta)
+        return PendingIntent.getBroadcast(context, 5, i, FLAGS)
+    }
+
+    /** Years with at least one day studied, plus the current year. */
+    private fun availableYears(s: Stats?, currentYear: Int): List<Int> {
+        val years = sortedSetOf(currentYear)
+        s?.days?.forEach { (d, st) -> if (st.reviews > 0) years.add(LocalDate.ofEpochDay(d).year) }
+        return years.toList()
+    }
+
+    fun changeYear(context: Context, widgetId: Int, delta: Int) {
+        if (widgetId < 0) return
+        val prefs = Prefs(context)
+        val s = AnkiRepository.cached(context)
+        val currentYear = LocalDate.ofEpochDay(s?.today() ?: AnkiDay.epochDay(System.currentTimeMillis(), 4)).year
+        val years = availableYears(s, currentYear)
+        val shown = prefs.year(widgetId).takeIf { it in years } ?: currentYear
+        val idx = (years.indexOf(shown) + delta).coerceIn(0, years.size - 1)
+        prefs.setYear(widgetId, if (years[idx] == currentYear) 0 else years[idx])
+        prefs.setSelectedDay(widgetId, -1L)
+        val mgr = AppWidgetManager.getInstance(context)
+        mgr.updateAppWidget(widgetId, buildHeatmap(context, mgr, widgetId, s))
+    }
+
     /** Tapping a square shows its count; tapping it again goes back to today. */
     fun select(context: Context, widgetId: Int, day: Long) {
         if (widgetId < 0) return
@@ -127,37 +160,50 @@ object WidgetUpdater {
         val goal = prefs.goal
         val rv = RemoteViews(pkg, R.layout.widget_heatmap)
 
-        // Fit a full year (53 weeks) of square cells into the space the widget has.
+        val today = s?.today() ?: AnkiDay.epochDay(System.currentTimeMillis(), 4)
+        val currentYear = LocalDate.ofEpochDay(today).year
+        val years = availableYears(s, currentYear)
+        val year = prefs.year(id).takeIf { it in years } ?: currentYear
+        val yearIdx = years.indexOf(year)
+
+        // Calendar year: Sunday on/before 1 Jan to Saturday on/after 31 Dec.
+        val jan1 = LocalDate.of(year, 1, 1).toEpochDay()
+        val dec31 = LocalDate.of(year, 12, 31).toEpochDay()
+        var start = jan1 - LocalDate.ofEpochDay(jan1).dayOfWeek.value % 7
+        val end = dec31 + (6 - LocalDate.ofEpochDay(dec31).dayOfWeek.value % 7)
+        var weeks = ((end - start + 1) / 7).toInt()
+
+        // Square cells sized to fill the widget.
         val (wDp, hDp) = widgetSizeDp(context, mgr, id)
         val availW = wDp - 24 - 16 - 4
-        val availH = hDp - 24 - 26 - 14 - 20 - 18 - 6
-        var weeks = 53
+        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6
         var step = minOf(availW / weeks, availH / 7)
         if (step < GridSizes.MIN) {
+            // Too narrow for a whole year: show the most recent weeks that fit.
             step = GridSizes.MIN
-            weeks = (availW / step).coerceIn(4, 53)
+            val fit = (availW / step).coerceIn(4, weeks)
+            val lastShown = if (year == currentYear) today - LocalDate.ofEpochDay(today).dayOfWeek.value % 7 + 6 else end
+            start = maxOf(start, lastShown - fit * 7L + 1)
+            weeks = fit
         }
         step = step.coerceIn(GridSizes.MIN, GridSizes.MAX)
         val si = step - GridSizes.MIN
-
-        val today = s?.today() ?: AnkiDay.epochDay(System.currentTimeMillis(), 4)
-        val start = Levels.gridStart(today, weeks)
-        val selected = prefs.selectedDay(id).takeIf { it in start..today } ?: -1L
+        val selected = prefs.selectedDay(id).takeIf { it in jan1..minOf(dec31, today) } ?: -1L
 
         rv.removeAllViews(R.id.days)
         rv.addView(R.id.days, RemoteViews(pkg, GridSizes.DAYS[si]))
 
+        // Month name above the week that contains the 1st of the month.
         rv.removeAllViews(R.id.months)
         var w = 0
         while (w < weeks) {
-            val first = LocalDate.ofEpochDay(start + w * 7L)
-            val prev = if (w == 0) null else LocalDate.ofEpochDay(start + (w - 1) * 7L)
-            val newMonth = if (prev == null) first.dayOfMonth <= 7 else prev.month != first.month
-            if (newMonth && w <= weeks - 3) {
+            val firstOfMonth = (0 until 7).map { start + w * 7L + it }
+                .firstOrNull { it in jan1..dec31 && LocalDate.ofEpochDay(it).dayOfMonth == 1 }
+            if (firstOfMonth != null && w <= weeks - 3) {
                 val label = RemoteViews(pkg, GridSizes.LABEL[si])
                 label.setTextViewText(
                     R.id.label,
-                    first.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3),
+                    LocalDate.ofEpochDay(firstOfMonth).month.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3),
                 )
                 rv.addView(R.id.months, label)
                 w += 3
@@ -173,7 +219,9 @@ object WidgetUpdater {
             for (d in 0 until 7) {
                 val day = start + week * 7L + d
                 val cell = RemoteViews(pkg, GridSizes.CELL[si])
-                if (day > today) {
+                if (day < jan1 || day > dec31) {
+                    cell.setImageViewResource(R.id.cell, R.drawable.cell_blank)
+                } else if (day > today) {
                     cell.setImageViewResource(R.id.cell, R.drawable.cell_future)
                 } else {
                     val level = Levels.level(s?.count(day) ?: 0, goal)
@@ -190,11 +238,17 @@ object WidgetUpdater {
             rv.addView(R.id.grid, col)
         }
 
-        rv.setTextViewText(R.id.streak, streakText(s))
+        rv.setTextViewText(R.id.year, year.toString())
+        rv.setViewVisibility(R.id.prev, if (yearIdx > 0) View.VISIBLE else View.INVISIBLE)
+        rv.setViewVisibility(R.id.next, if (yearIdx < years.size - 1) View.VISIBLE else View.INVISIBLE)
+        rv.setOnClickPendingIntent(R.id.prev, yearIntent(context, id, -1))
+        rv.setOnClickPendingIntent(R.id.next, yearIntent(context, id, 1))
+
         val info = when {
             s == null -> "Open the app to set up"
             s.error != null -> s.error
             selected >= 0 -> Levels.reviewedOn(selected, s.count(selected))
+            year != currentYear -> "$year: ${(jan1..dec31).sumOf { s.count(it) }} cards reviewed in total"
             else -> "Today: ${s.count(today)} cards reviewed · goal $goal"
         }
         rv.setTextViewText(R.id.info, info)

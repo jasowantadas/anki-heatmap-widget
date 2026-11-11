@@ -33,6 +33,18 @@ open class BaseWidget : AppWidgetProvider() {
                     }
                 }
             }
+            WidgetUpdater.ACTION_YEAR -> {
+                val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
+                val delta = intent.getIntExtra(WidgetUpdater.EXTRA_DELTA, 0)
+                val pending = goAsync()
+                thread {
+                    try {
+                        WidgetUpdater.changeYear(context, id, delta)
+                    } finally {
+                        pending.finish()
+                    }
+                }
+            }
             AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED -> {
                 val pending = goAsync()
                 thread {

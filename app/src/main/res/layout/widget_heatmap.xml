@@ -25,12 +25,31 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/streak"
+            android:id="@+id/prev"
+            android:layout_width="34dp"
+            android:layout_height="26dp"
+            android:gravity="center"
+            android:text="‹"
+            android:textColor="#F1EFE8"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/year"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:textColor="#97C459"
-            android:textSize="13sp" />
+            android:textColor="#F1EFE8"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/next"
+            android:layout_width="34dp"
+            android:layout_height="26dp"
+            android:gravity="center"
+            android:text="›"
+            android:textColor="#F1EFE8"
+            android:textSize="20sp" />
 
         <ImageView
             android:id="@+id/refresh"
@@ -56,7 +75,7 @@
 
             <TextView
                 android:layout_width="16dp"
-                android:layout_height="14dp" />
+                android:layout_height="18dp" />
 
             <LinearLayout
                 android:id="@+id/days"
@@ -73,7 +92,7 @@
             <LinearLayout
                 android:id="@+id/months"
                 android:layout_width="wrap_content"
-                android:layout_height="14dp"
+                android:layout_height="18dp"
                 android:orientation="horizontal" />
 
             <LinearLayout

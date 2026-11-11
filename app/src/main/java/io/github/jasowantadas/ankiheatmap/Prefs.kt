@@ -24,6 +24,11 @@ class Prefs(context: Context) {
 
     fun setSelectedDay(widgetId: Int, day: Long) = sp.edit().putLong("sel_$widgetId", day).apply()
 
+    /** Year shown on a widget (0 = current year). */
+    fun year(widgetId: Int): Int = sp.getInt("year_$widgetId", 0)
+
+    fun setYear(widgetId: Int, year: Int) = sp.edit().putInt("year_$widgetId", year).apply()
+
     companion object {
         @Suppress("DEPRECATION")
         val DEFAULT_PATH: String =
