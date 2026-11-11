@@ -69,45 +69,115 @@
             android:src="@drawable/ic_refresh" />
     </LinearLayout>
 
+    <!-- Grid area: stretches to the widget's real size, so it doesn't depend on what the launcher reports. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="16dp"
-                android:layout_height="18dp" />
-
-            <LinearLayout
-                android:id="@+id/days"
-                android:layout_width="16dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </LinearLayout>
+            android:id="@+id/months"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:orientation="horizontal"
+            android:paddingStart="16dp" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:id="@+id/months"
-                android:layout_width="wrap_content"
-                android:layout_height="18dp"
-                android:orientation="horizontal" />
+                android:layout_width="16dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text=""
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text="M"
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text=""
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text="W"
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text=""
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text="F"
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text=""
+                    android:textColor="#B4B2A9"
+                    android:textSize="9sp" />
+            </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/grid"
-                android:layout_width="wrap_content"
+            <FrameLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" />
+                android:layout_weight="1">
+
+                <!-- Sets the grid's shape (weeks x 7) so every square stays square. -->
+                <ImageView
+                    android:id="@+id/aspect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/aspect_53" />
+
+                <LinearLayout
+                    android:id="@+id/grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal" />
+            </FrameLayout>
         </LinearLayout>
     </LinearLayout>
 

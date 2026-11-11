@@ -5,15 +5,12 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.net.Uri
-import android.os.Build
-import android.util.SizeF
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -129,13 +126,18 @@ object WidgetUpdater {
         return "🔥 $n day" + if (n == 1) "" else "s"
     }
 
-    /** Widget size in dp for the current orientation. */
-    private fun widgetSizeDp(context: Context, mgr: AppWidgetManager, id: Int): Pair<Int, Int> {
-        val o = mgr.getAppWidgetOptions(id)
-        val landscape = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val w = o.getInt(if (landscape) AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH else AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-        val h = o.getInt(if (landscape) AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT else AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
-        return Pair(if (w > 0) w else 300, if (h > 0) h else 180)
+    private val MONTH_LAYOUTS = intArrayOf(
+        R.layout.hm_month_1, R.layout.hm_month_2, R.layout.hm_month_3,
+        R.layout.hm_month_4, R.layout.hm_month_5, R.layout.hm_month_6,
+    )
+
+    /** A month label as wide as [weeks] grid columns (wider spans are split into blank pieces). */
+    private fun monthLabel(pkg: String, weeks: Int, text: String): RemoteViews {
+        if (weeks <= 6) {
+            return RemoteViews(pkg, MONTH_LAYOUTS[weeks.coerceAtLeast(1) - 1]).apply { setTextViewText(R.id.label, text) }
+        }
+        val box = RemoteViews(pkg, MONTH_LAYOUTS[5]).apply { setTextViewText(R.id.label, text) }
+        return box
     }
 
     /** Accent for text: a lighter shade of the chosen colour, readable on the dark widget. */
@@ -160,26 +162,8 @@ object WidgetUpdater {
         return b
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun buildHeatmap(context: Context, mgr: AppWidgetManager, id: Int, s: Stats?): RemoteViews {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            @Suppress("DEPRECATION")
-            val sizes = mgr.getAppWidgetOptions(id)
-                .getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
-                ?.filter { it.width > 0 && it.height > 0 }
-                ?.distinctBy { Pair(it.width.toInt(), it.height.toInt()) }
-                ?.take(4)
-            if (!sizes.isNullOrEmpty()) {
-                if (sizes.size == 1) {
-                    return buildHeatmapSized(context, id, s, sizes[0].width.toInt(), sizes[0].height.toInt())
-                }
-                return RemoteViews(sizes.associateWith { buildHeatmapSized(context, id, s, it.width.toInt(), it.height.toInt()) })
-            }
-        }
-        val (wDp, hDp) = widgetSizeDp(context, mgr, id)
-        return buildHeatmapSized(context, id, s, wDp, hDp)
-    }
-
-    private fun buildHeatmapSized(context: Context, id: Int, s: Stats?, wDp: Int, hDp: Int): RemoteViews {
         val pkg = context.packageName
         val prefs = Prefs(context)
         val average = s?.dailyAverage() ?: 0
@@ -195,47 +179,30 @@ object WidgetUpdater {
         // Calendar year: Sunday on/before 1 Jan to Saturday on/after 31 Dec.
         val jan1 = LocalDate.of(year, 1, 1).toEpochDay()
         val dec31 = LocalDate.of(year, 12, 31).toEpochDay()
-        var start = jan1 - LocalDate.ofEpochDay(jan1).dayOfWeek.value % 7
+        val start = jan1 - LocalDate.ofEpochDay(jan1).dayOfWeek.value % 7
         val end = dec31 + (6 - LocalDate.ofEpochDay(dec31).dayOfWeek.value % 7)
-        var weeks = ((end - start + 1) / 7).toInt()
-
-        // Square cells sized to fill the widget.
-        val availW = wDp - 24 - 16 - 4
-        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6
-        var step = minOf(availW / weeks, availH / 7)
-        if (step < GridSizes.MIN) {
-            // Too narrow for a whole year: show the most recent weeks that fit.
-            step = GridSizes.MIN
-            val fit = (availW / step).coerceIn(4, weeks)
-            val lastShown = if (year == currentYear) today - LocalDate.ofEpochDay(today).dayOfWeek.value % 7 + 6 else end
-            start = maxOf(start, lastShown - fit * 7L + 1)
-            weeks = fit
-        }
-        step = step.coerceIn(GridSizes.MIN, GridSizes.MAX)
-        val si = step - GridSizes.MIN
+        val weeks = ((end - start + 1) / 7).toInt()
         val selected = prefs.selectedDay(id).takeIf { it in jan1..minOf(dec31, today) } ?: -1L
 
-        rv.removeAllViews(R.id.days)
-        rv.addView(R.id.days, RemoteViews(pkg, GridSizes.DAYS[si]))
+        // The grid fills the widget's real width; this invisible shape keeps it weeks x 7 so squares stay square.
+        rv.setImageViewResource(R.id.aspect, if (weeks >= 54) R.drawable.aspect_54 else R.drawable.aspect_53)
 
-        // Month name above the week that contains the 1st of the month.
+        // Month names: each label spans the weeks from its month's first week to the next month's.
         rv.removeAllViews(R.id.months)
-        var w = 0
-        while (w < weeks) {
-            val firstOfMonth = (0 until 7).map { start + w * 7L + it }
-                .firstOrNull { it in jan1..dec31 && LocalDate.ofEpochDay(it).dayOfMonth == 1 }
-            if (firstOfMonth != null && w <= weeks - 3) {
-                val label = RemoteViews(pkg, GridSizes.LABEL[si])
-                label.setTextViewText(
-                    R.id.label,
-                    LocalDate.ofEpochDay(firstOfMonth).month.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3),
-                )
-                rv.addView(R.id.months, label)
-                w += 3
-            } else {
-                rv.addView(R.id.months, RemoteViews(pkg, GridSizes.SPACE[si]))
-                w += 1
+        val monthStarts = (0 until weeks).filter { w ->
+            (0 until 7).any { d ->
+                val day = start + w * 7L + d
+                day in jan1..dec31 && LocalDate.ofEpochDay(day).dayOfMonth == 1
             }
+        }
+        if (monthStarts.isNotEmpty() && monthStarts[0] > 0) {
+            rv.addView(R.id.months, monthLabel(pkg, monthStarts[0], ""))
+        }
+        monthStarts.forEachIndexed { i, w ->
+            val span = (if (i + 1 < monthStarts.size) monthStarts[i + 1] else weeks) - w
+            val firstDay = (0 until 7).map { start + w * 7L + it }.first { it >= jan1 }
+            val month = LocalDate.ofEpochDay(firstDay).let { d -> if (d.dayOfMonth == 1) d.month else d.month.plus(1) }
+            rv.addView(R.id.months, monthLabel(pkg, span, month.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3)))
         }
 
         rv.removeAllViews(R.id.grid)
@@ -245,20 +212,20 @@ object WidgetUpdater {
                 val day = start + week * 7L + d
                 val cell: RemoteViews
                 if (day < jan1 || day > dec31) {
-                    cell = RemoteViews(pkg, GridSizes.CELL[si])
+                    cell = RemoteViews(pkg, R.layout.hm_cell)
                     cell.setImageViewResource(R.id.cell, R.drawable.cell_blank)
                 } else if (day > today) {
-                    cell = RemoteViews(pkg, GridSizes.CELL[si])
+                    cell = RemoteViews(pkg, R.layout.hm_cell)
                     cell.setImageViewResource(R.id.cell, R.drawable.cell_future)
                 } else {
                     val color = Levels.color(Levels.level(s?.count(day) ?: 0, average), palette)
                     if (day == selected || day == today) {
                         // Outlined square: white for the tapped day, grey for today.
-                        cell = RemoteViews(pkg, GridSizes.MARK[si])
+                        cell = RemoteViews(pkg, R.layout.hm_mark)
                         cell.setInt(R.id.ring, "setColorFilter", if (day == selected) 0xFFFFFFFF.toInt() else 0xFFB4B2A9.toInt())
                         cell.setInt(R.id.fill, "setColorFilter", color)
                     } else {
-                        cell = RemoteViews(pkg, GridSizes.CELL[si])
+                        cell = RemoteViews(pkg, R.layout.hm_cell)
                         cell.setInt(R.id.cell, "setColorFilter", color)
                     }
                     cell.setOnClickPendingIntent(R.id.cell, selectIntent(context, id, day))
