@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Anki Heatmap</string>
+    <string name="widget_heatmap_name">Anki heatmap</string>
+    <string name="widget_today_name">Anki today</string>
+    <string name="widget_heatmap_desc">GitHub-style grid of the cards you review each day</string>
+    <string name="widget_today_desc">Today\'s reviews against your daily goal, plus your streak</string>
+    <string name="refresh">Refresh</string>
+</resources>
