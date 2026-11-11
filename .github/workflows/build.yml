@@ -33,7 +33,7 @@ jobs:
         with:
           tag_name: build-${{ github.run_number }}
           name: Anki Heatmap build ${{ github.run_number }}
-          body: "AnkiHeatmap.apk: normal version (Xiaomi tablet). AnkiHeatmap-Oppo.apk: Oppo tablet version with fixed widths (about 5 in portrait, 8 in landscape)."
+          body: "AnkiHeatmap.apk: normal version (Xiaomi tablet). AnkiHeatmap-Oppo.apk: Oppo tablet version with a fixed widget size measured on that tablet."
           files: |
             AnkiHeatmap.apk
             AnkiHeatmap-Oppo.apk

@@ -36,20 +36,24 @@ android {
         }
     }
 
-    // "standard" works out the widget size from the launcher. "oppo" uses fixed widths for the
-    // Oppo tablet, whose launcher reports the wrong size: about 5 inches (800 dp) in portrait and
-    // about 8 inches (1280 dp) in landscape. 160 dp = 1 inch.
+    // "standard" works out the widget size from the launcher. "oppo" uses a fixed widget size for
+    // the Oppo tablet, whose launcher reports the wrong size. Measured from screenshots of the
+    // widget as placed: portrait about 569 x 270 dp, landscape about 717 x 186 dp (160 dp = 1 inch).
     flavorDimensions += "device"
     productFlavors {
         create("standard") {
             dimension = "device"
             buildConfigField("int", "FIXED_PORTRAIT_WIDTH_DP", "0")
+            buildConfigField("int", "FIXED_PORTRAIT_HEIGHT_DP", "0")
             buildConfigField("int", "FIXED_LANDSCAPE_WIDTH_DP", "0")
+            buildConfigField("int", "FIXED_LANDSCAPE_HEIGHT_DP", "0")
         }
         create("oppo") {
             dimension = "device"
-            buildConfigField("int", "FIXED_PORTRAIT_WIDTH_DP", "800")
-            buildConfigField("int", "FIXED_LANDSCAPE_WIDTH_DP", "1280")
+            buildConfigField("int", "FIXED_PORTRAIT_WIDTH_DP", "569")
+            buildConfigField("int", "FIXED_PORTRAIT_HEIGHT_DP", "270")
+            buildConfigField("int", "FIXED_LANDSCAPE_WIDTH_DP", "717")
+            buildConfigField("int", "FIXED_LANDSCAPE_HEIGHT_DP", "186")
         }
     }
     buildFeatures {

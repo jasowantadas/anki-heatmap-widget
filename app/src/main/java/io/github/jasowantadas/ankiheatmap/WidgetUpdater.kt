@@ -162,10 +162,13 @@ object WidgetUpdater {
 
     fun buildHeatmap(context: Context, mgr: AppWidgetManager, id: Int, s: Stats?): RemoteViews {
         if (BuildConfig.FIXED_PORTRAIT_WIDTH_DP > 0) {
-            // Oppo version: fixed widths, one layout per orientation; Android picks the right one on rotation.
-            // The height is left open so the squares are sized by the width.
-            val landscape = buildHeatmapSized(context, id, s, BuildConfig.FIXED_LANDSCAPE_WIDTH_DP, 5000)
-            val portrait = buildHeatmapSized(context, id, s, BuildConfig.FIXED_PORTRAIT_WIDTH_DP, 5000)
+            // Oppo version: fixed widget size, one layout per orientation; Android picks the right one on rotation.
+            val landscape = buildHeatmapSized(
+                context, id, s, BuildConfig.FIXED_LANDSCAPE_WIDTH_DP, BuildConfig.FIXED_LANDSCAPE_HEIGHT_DP,
+            )
+            val portrait = buildHeatmapSized(
+                context, id, s, BuildConfig.FIXED_PORTRAIT_WIDTH_DP, BuildConfig.FIXED_PORTRAIT_HEIGHT_DP,
+            )
             return RemoteViews(landscape, portrait)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
