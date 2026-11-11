@@ -12,14 +12,6 @@ import java.net.URL
 object Quotes {
     private const val FETCH_EVERY_MS = 3 * 60 * 60 * 1000L
 
-    private val BUILT_IN = listOf(
-        "Small reviews every day beat big ones once a week.",
-        "Clear today's cards and tomorrow gets easier.",
-        "Consistency is the whole trick.",
-        "Every card you review now is one you won't forget in the exam hall.",
-        "Show up today. That's the streak.",
-    )
-
     /** A gist page link works too: it's turned into its raw-text link. */
     fun rawUrl(url: String): String {
         val u = url.trim()
@@ -57,9 +49,11 @@ object Quotes {
     }
 
     fun forDay(context: Context, day: Long): String? {
+        // No link (or nothing in the file) = no quote line at all.
         val prefs = Prefs(context)
-        if (!prefs.showQuote) return null
-        val list = parse(prefs.quotesText).ifEmpty { BUILT_IN }
+        if (prefs.quotesUrl.isBlank()) return null
+        val list = parse(prefs.quotesText)
+        if (list.isEmpty()) return null
         return list[Math.floorMod(day, list.size.toLong()).toInt()]
     }
 }

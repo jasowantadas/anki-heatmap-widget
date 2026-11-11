@@ -159,7 +159,7 @@ object WidgetUpdater {
         val pkg = context.packageName
         val prefs = Prefs(context)
         val average = s?.dailyAverage() ?: 0
-        val palette = Levels.palette(prefs.baseColor)
+        val palette = Levels.palette(Levels.DEFAULT_BASE)
         val rv = RemoteViews(pkg, R.layout.widget_heatmap)
 
         val today = s?.today() ?: AnkiDay.epochDay(System.currentTimeMillis(), 4)
@@ -269,17 +269,13 @@ object WidgetUpdater {
         rv.setTextViewText(R.id.stats, if (s == null) "" else statsLine(s))
         rv.setOnClickPendingIntent(R.id.title, openAppIntent(context))
         rv.setOnClickPendingIntent(R.id.stats, openAnkiIntent(context))
-        rv.setOnClickPendingIntent(
-            R.id.settings,
-            PendingIntent.getActivity(context, 6, Intent(context, ColorPickerActivity::class.java), FLAGS),
-        )
         rv.setOnClickPendingIntent(R.id.refresh, refreshIntent(context, HeatmapWidget::class.java))
         return rv
     }
 
     fun buildToday(context: Context, s: Stats?): RemoteViews {
         val average = s?.dailyAverage() ?: 0
-        val base = Prefs(context).baseColor
+        val base = Levels.DEFAULT_BASE
         val rv = RemoteViews(context.packageName, R.layout.widget_today)
         val count = s?.let { it.count(it.today()) } ?: 0
         rv.setImageViewBitmap(R.id.ring, ring(count, average, base))

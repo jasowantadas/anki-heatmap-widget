@@ -12,7 +12,6 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -30,7 +29,6 @@ class MainActivity : Activity() {
     private lateinit var permButton: Button
     private lateinit var pathEdit: EditText
     private lateinit var quoteUrlEdit: EditText
-    private lateinit var quoteCheck: CheckBox
     private lateinit var quoteText: TextView
     private lateinit var deckSpinner: Spinner
     private lateinit var statusText: TextView
@@ -118,22 +116,12 @@ class MainActivity : Activity() {
         deckSpinner = Spinner(this)
         root.addView(deckSpinner)
 
-        root.addView(button("Heatmap colour…") { startActivity(Intent(this, ColorPickerActivity::class.java)) })
 
         root.addView(heading("Motivational quote"))
-        quoteCheck = CheckBox(this).apply {
-            text = "Show a quote on the widget"
-            isChecked = prefs.showQuote
-            setOnCheckedChangeListener { _, checked ->
-                prefs.showQuote = checked
-                refresh(force = false)
-            }
-        }
-        root.addView(quoteCheck)
         root.addView(text(
             "Link to your quotes file: a public GitHub gist with one quote per line. " +
                 "Edit the gist any time; the widget picks it up within 3 hours, or straight away when you tap ↻. " +
-                "One quote is shown per day, in order. Leave empty to use the built-in quotes.",
+                "One quote is shown per day, in order. Leave empty for no quote on the widget.",
             13f,
         ))
         quoteUrlEdit = EditText(this).apply {
@@ -232,7 +220,7 @@ class MainActivity : Activity() {
         val updated = if (s.loadedAt > 0) DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(s.loadedAt)) else "never"
         statusText.text = (s.error?.let { "⚠ $it\n" } ?: "") + "Last read from AnkiDroid: $updated"
 
-        heatmap.palette = Levels.palette(prefs.baseColor)
+        heatmap.palette = Levels.palette(Levels.DEFAULT_BASE)
         heatmap.stats = s
         heatmap.requestLayout()
         heatmapScroll.post { heatmapScroll.fullScroll(View.FOCUS_RIGHT) }

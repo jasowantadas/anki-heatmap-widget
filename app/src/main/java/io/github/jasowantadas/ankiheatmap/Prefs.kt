@@ -10,10 +10,6 @@ class Prefs(context: Context) {
         get() = sp.getString("path", null) ?: DEFAULT_PATH
         set(value) = sp.edit().putString("path", value).apply()
 
-    /** Middle shade of the heatmap, picked by the user. */
-    var baseColor: Int
-        get() = sp.getInt("base_color", Levels.DEFAULT_BASE)
-        set(value) = sp.edit().putInt("base_color", value).apply()
 
     /** Deck name ("Parent::Child"); empty = all decks. */
     var deck: String
@@ -32,10 +28,6 @@ class Prefs(context: Context) {
     var quotesFetchedAt: Long
         get() = sp.getLong("quotes_fetched", 0L)
         set(value) = sp.edit().putLong("quotes_fetched", value).apply()
-
-    var showQuote: Boolean
-        get() = sp.getBoolean("show_quote", true)
-        set(value) = sp.edit().putBoolean("show_quote", value).apply()
 
     /** Day picked by tapping a square on a widget (-1 = none). */
     fun selectedDay(widgetId: Int): Long = sp.getLong("sel_$widgetId", -1L)
