@@ -20,6 +20,16 @@ object Levels {
         R.drawable.cell_today_l3, R.drawable.cell_today_l4,
     )
 
+    val SELECTED_CELLS = intArrayOf(
+        R.drawable.cell_sel_l0, R.drawable.cell_sel_l1, R.drawable.cell_sel_l2,
+        R.drawable.cell_sel_l3, R.drawable.cell_sel_l4,
+    )
+
+    /** "43 cards reviewed on Saturday, 5 September 2026" */
+    fun reviewedOn(day: Long, count: Int): String =
+        (if (count == 1) "1 card" else "$count cards") + " reviewed on " +
+            LocalDate.ofEpochDay(day).format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.getDefault()))
+
     /** 0 = nothing, 1 = under 25% of goal, 2 = under 50%, 3 = under 100%, 4 = goal reached. */
     fun level(count: Int, goal: Int): Int = when {
         count <= 0 -> 0

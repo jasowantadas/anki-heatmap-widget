@@ -40,6 +40,18 @@ class Stats(
 
     fun totalReviews(): Int = days.values.sumOf { it.reviews }
 
+    fun daysLearned(): Int = days.values.count { it.reviews > 0 }
+
+    /** Average cards per day on the days you studied. */
+    fun dailyAverage(): Int = daysLearned().let { if (it == 0) 0 else totalReviews() / it }
+
+    /** % of days since your first review on which you studied. */
+    fun daysLearnedPercent(): Int {
+        val first = days.filterValues { it.reviews > 0 }.keys.minOrNull() ?: return 0
+        val span = today() - first + 1
+        return if (span <= 0) 0 else (daysLearned() * 100 / span).toInt()
+    }
+
     fun currentStreak(): Int {
         val t = today()
         var d = if (count(t) > 0) t else t - 1

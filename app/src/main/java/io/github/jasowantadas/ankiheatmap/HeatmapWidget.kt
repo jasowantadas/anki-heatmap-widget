@@ -21,6 +21,18 @@ open class BaseWidget : AppWidgetProvider() {
                     }
                 }
             }
+            WidgetUpdater.ACTION_SELECT -> {
+                val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
+                val day = intent.getLongExtra(WidgetUpdater.EXTRA_DAY, -1L)
+                val pending = goAsync()
+                thread {
+                    try {
+                        WidgetUpdater.select(context, id, day)
+                    } finally {
+                        pending.finish()
+                    }
+                }
+            }
             AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED -> {
                 val pending = goAsync()
                 thread {

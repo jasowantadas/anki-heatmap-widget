@@ -26,13 +26,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".DayDetailActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:taskAffinity=""
-            android:theme="@style/DialogTheme" />
-
         <receiver
             android:name=".HeatmapWidget"
             android:exported="false"

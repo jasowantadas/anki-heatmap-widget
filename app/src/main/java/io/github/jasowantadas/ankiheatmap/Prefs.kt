@@ -19,6 +19,11 @@ class Prefs(context: Context) {
         get() = sp.getString("deck", "") ?: ""
         set(value) = sp.edit().putString("deck", value).apply()
 
+    /** Day picked by tapping a square on a widget (-1 = none). */
+    fun selectedDay(widgetId: Int): Long = sp.getLong("sel_$widgetId", -1L)
+
+    fun setSelectedDay(widgetId: Int, day: Long) = sp.edit().putLong("sel_$widgetId", day).apply()
+
     companion object {
         @Suppress("DEPRECATION")
         val DEFAULT_PATH: String =

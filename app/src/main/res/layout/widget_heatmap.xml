@@ -5,11 +5,11 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="26dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -21,7 +21,7 @@
             android:singleLine="true"
             android:text="Anki reviews"
             android:textColor="#F1EFE8"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
@@ -30,59 +30,78 @@
             android:layout_height="wrap_content"
             android:singleLine="true"
             android:textColor="#97C459"
-            android:textSize="12sp" />
+            android:textSize="13sp" />
 
         <ImageView
             android:id="@+id/refresh"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="8dp"
             android:contentDescription="@string/refresh"
-            android:padding="4dp"
+            android:padding="3dp"
             android:src="@drawable/ic_refresh" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/months"
-        android:layout_width="wrap_content"
-        android:layout_height="13dp"
-        android:layout_marginTop="2dp"
-        android:orientation="horizontal"
-        android:paddingStart="16dp" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
         android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="16dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="" android:textColor="#B4B2A9" android:textSize="9sp" /> 
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="M" android:textColor="#B4B2A9" android:textSize="9sp" />
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="" android:textColor="#B4B2A9" android:textSize="9sp" />
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="W" android:textColor="#B4B2A9" android:textSize="9sp" />
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="" android:textColor="#B4B2A9" android:textSize="9sp" />
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="F" android:textColor="#B4B2A9" android:textSize="9sp" />
-        <TextView android:layout_width="16dp" android:layout_height="14dp" android:gravity="center_vertical" android:text="" android:textColor="#B4B2A9" android:textSize="9sp" />
+
+            <TextView
+                android:layout_width="16dp"
+                android:layout_height="14dp" />
+
+            <LinearLayout
+                android:id="@+id/days"
+                android:layout_width="16dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/grid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal" />
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/months"
+                android:layout_width="wrap_content"
+                android:layout_height="14dp"
+                android:orientation="horizontal" />
+
+            <LinearLayout
+                android:id="@+id/grid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </LinearLayout>
     </LinearLayout>
 
     <TextView
-        android:id="@+id/footer"
+        android:id="@+id/info"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_height="20dp"
         android:ellipsize="end"
+        android:gravity="center"
         android:singleLine="true"
         android:text="Open the app to set up"
-        android:textColor="#B4B2A9"
-        android:textSize="11sp" />
+        android:textColor="#F1EFE8"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/stats"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:singleLine="true"
+        android:textColor="#D3D1C7"
+        android:textSize="12sp" />
 </LinearLayout>
