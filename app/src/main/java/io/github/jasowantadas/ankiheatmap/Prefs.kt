@@ -16,7 +16,7 @@ class Prefs(context: Context) {
         get() = sp.getString("deck", "") ?: ""
         set(value) = sp.edit().putString("deck", value).apply()
 
-    /** Link to the online quotes file (a GitHub gist works). */
+    /** Link to the online quotes file (a GitHub gist). Empty = no quote. */
     var quotesUrl: String
         get() = sp.getString("quotes_url", "") ?: ""
         set(value) = sp.edit().putString("quotes_url", value).apply()

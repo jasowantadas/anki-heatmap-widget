@@ -6,8 +6,9 @@ import java.net.URL
 
 /**
  * Quotes come from a plain text file online (one quote per line, lines starting with # are
- * ignored). Edit the file and the widget picks up the change, no reinstall needed.
+ * ignored), e.g. a GitHub gist. Edit the file and the widget picks up the change, no reinstall.
  * One quote is shown per day, going through the list in order.
+ * No link, or an empty file, means no quote: the widget title stays "Anki reviews".
  */
 object Quotes {
     private const val FETCH_EVERY_MS = 3 * 60 * 60 * 1000L
@@ -29,27 +30,26 @@ object Quotes {
         val now = System.currentTimeMillis()
         if (!force && now - prefs.quotesFetchedAt < FETCH_EVERY_MS) return
         try {
-            val conn = URL(rawUrl(url) + (if (rawUrl(url).contains("?")) "&" else "?") + "t=$now")
-                .openConnection() as HttpURLConnection
+            val raw = rawUrl(url)
+            val conn = URL(raw + (if (raw.contains("?")) "&" else "?") + "t=$now").openConnection() as HttpURLConnection
             conn.connectTimeout = 8000
             conn.readTimeout = 8000
             conn.useCaches = false
             try {
                 if (conn.responseCode == 200) {
-                    val text = conn.inputStream.bufferedReader().use { it.readText() }
-                    prefs.quotesText = text
+                    prefs.quotesText = conn.inputStream.bufferedReader().use { it.readText() }
                     prefs.quotesFetchedAt = now
                 }
             } finally {
                 conn.disconnect()
             }
         } catch (e: Exception) {
-            // Offline or bad link: keep showing the last quotes we had.
+            // Offline or bad link: keep the last quotes we had.
         }
     }
 
+    /** Today's quote, or null when there's no link or nothing in the file. */
     fun forDay(context: Context, day: Long): String? {
-        // No link (or nothing in the file) = no quote line at all.
         val prefs = Prefs(context)
         if (prefs.quotesUrl.isBlank()) return null
         val list = parse(prefs.quotesText)

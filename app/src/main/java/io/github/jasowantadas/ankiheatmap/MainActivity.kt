@@ -117,11 +117,11 @@ class MainActivity : Activity() {
         root.addView(deckSpinner)
 
 
-        root.addView(heading("Motivational quote"))
+        root.addView(heading("Widget title quote"))
         root.addView(text(
-            "Link to your quotes file: a public GitHub gist with one quote per line. " +
-                "Edit the gist any time; the widget picks it up within 3 hours, or straight away when you tap ↻. " +
-                "One quote is shown per day, in order. Leave empty for no quote on the widget.",
+            "Paste the link to a public GitHub gist with one quote per line. The widget title shows " +
+                "one quote per day instead of \"Anki reviews\". Edit the gist any time: the widget picks it up " +
+                "within 3 hours, or straight away when you tap ↻. Leave empty to keep \"Anki reviews\".",
             13f,
         ))
         quoteUrlEdit = EditText(this).apply {
@@ -132,7 +132,7 @@ class MainActivity : Activity() {
         }
         root.addView(quoteUrlEdit)
         root.addView(button("Save quote link") { saveSettings() })
-        quoteText = text("", 14f).apply { setTypeface(typeface, android.graphics.Typeface.ITALIC) }
+        quoteText = text("", 14f)
         root.addView(quoteText)
 
         root.addView(heading("Setup"))
@@ -226,7 +226,8 @@ class MainActivity : Activity() {
         heatmapScroll.post { heatmapScroll.fullScroll(View.FOCUS_RIGHT) }
 
         val today = s.today()
-        quoteText.text = Quotes.forDay(this, today)?.let { "Today's quote: \u201C$it\u201D" } ?: ""
+        quoteText.text = Quotes.forDay(this, today)?.let { "Today's title: \u201C$it\u201D" }
+            ?: if (prefs.quotesUrl.isBlank()) "" else "No quotes loaded yet. Check the link, then tap Refresh now."
         val studied = s.days.values.count { it.reviews > 0 }
         statsText.text = "Today: ${s.count(today)} cards\n" +
             "Daily average: ${s.dailyAverage()} cards\n" +

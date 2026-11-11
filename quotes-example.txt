@@ -1,5 +1,0 @@
-# One quote per line. Lines starting with # are ignored.
-# The widget shows one quote per day, going through the list in order.
-Small reviews every day beat big ones once a week.
-Clear today's cards and tomorrow gets easier.
-Show up today. That's the streak.

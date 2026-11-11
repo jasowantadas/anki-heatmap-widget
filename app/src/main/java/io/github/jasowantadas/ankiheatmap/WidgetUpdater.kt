@@ -179,7 +179,7 @@ object WidgetUpdater {
         val (wDp, hDp) = widgetSizeDp(context, mgr, id)
         val availW = wDp - 24 - 16 - 4
         val quote = Quotes.forDay(context, today)
-        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6 - (if (quote != null) 36 else 0)
+        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6 - (if (quote != null) 16 else 0)
         var step = minOf(availW / weeks, availH / 7)
         if (step < GridSizes.MIN) {
             // Too narrow for a whole year: show the most recent weeks that fit.
@@ -246,11 +246,17 @@ object WidgetUpdater {
             rv.addView(R.id.grid, col)
         }
 
+        // Title: today's quote (centred) if there is one, otherwise "Anki reviews".
         if (quote != null) {
+            rv.setViewVisibility(R.id.title, View.GONE)
             rv.setViewVisibility(R.id.quote, View.VISIBLE)
+            rv.setViewVisibility(R.id.quote_spacer, if (wDp >= 480) View.VISIBLE else View.GONE)
             rv.setTextViewText(R.id.quote, "\u201C$quote\u201D")
+            rv.setOnClickPendingIntent(R.id.quote, openAppIntent(context))
         } else {
+            rv.setViewVisibility(R.id.title, View.VISIBLE)
             rv.setViewVisibility(R.id.quote, View.GONE)
+            rv.setViewVisibility(R.id.quote_spacer, View.GONE)
         }
         rv.setTextViewText(R.id.year, year.toString())
         rv.setViewVisibility(R.id.prev, if (yearIdx > 0) View.VISIBLE else View.INVISIBLE)

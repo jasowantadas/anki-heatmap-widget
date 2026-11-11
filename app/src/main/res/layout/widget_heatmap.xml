@@ -9,9 +9,30 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="26dp"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
+        android:minHeight="26dp"
         android:orientation="horizontal">
+
+        <!-- Same width as the controls on the right, so a quote sits in the true centre. -->
+        <TextView
+            android:id="@+id/quote_spacer"
+            android:layout_width="136dp"
+            android:layout_height="1dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/quote"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textColor="#F1EFE8"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/title"
@@ -60,19 +81,6 @@
             android:padding="3dp"
             android:src="@drawable/ic_refresh" />
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/quote"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:maxLines="2"
-        android:textColor="#D3D1C7"
-        android:textSize="13sp"
-        android:textStyle="italic"
-        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
