@@ -20,6 +20,23 @@ class Prefs(context: Context) {
         get() = sp.getString("deck", "") ?: ""
         set(value) = sp.edit().putString("deck", value).apply()
 
+    /** Link to the online quotes file (a GitHub gist works). */
+    var quotesUrl: String
+        get() = sp.getString("quotes_url", "") ?: ""
+        set(value) = sp.edit().putString("quotes_url", value).apply()
+
+    var quotesText: String
+        get() = sp.getString("quotes_text", "") ?: ""
+        set(value) = sp.edit().putString("quotes_text", value).apply()
+
+    var quotesFetchedAt: Long
+        get() = sp.getLong("quotes_fetched", 0L)
+        set(value) = sp.edit().putLong("quotes_fetched", value).apply()
+
+    var showQuote: Boolean
+        get() = sp.getBoolean("show_quote", true)
+        set(value) = sp.edit().putBoolean("show_quote", value).apply()
+
     /** Day picked by tapping a square on a widget (-1 = none). */
     fun selectedDay(widgetId: Int): Long = sp.getLong("sel_$widgetId", -1L)
 

@@ -38,6 +38,7 @@ object WidgetUpdater {
             for (id in mgr.getAppWidgetIds(ComponentName(context, HeatmapWidget::class.java))) prefs.setSelectedDay(id, -1L)
         }
         val stats = AnkiRepository.load(context, force)
+        Quotes.refresh(context, force)
         redrawAll(context, stats)
     }
 
@@ -177,7 +178,8 @@ object WidgetUpdater {
         // Square cells sized to fill the widget.
         val (wDp, hDp) = widgetSizeDp(context, mgr, id)
         val availW = wDp - 24 - 16 - 4
-        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6
+        val quote = Quotes.forDay(context, today)
+        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6 - (if (quote != null) 36 else 0)
         var step = minOf(availW / weeks, availH / 7)
         if (step < GridSizes.MIN) {
             // Too narrow for a whole year: show the most recent weeks that fit.
@@ -244,6 +246,12 @@ object WidgetUpdater {
             rv.addView(R.id.grid, col)
         }
 
+        if (quote != null) {
+            rv.setViewVisibility(R.id.quote, View.VISIBLE)
+            rv.setTextViewText(R.id.quote, "\u201C$quote\u201D")
+        } else {
+            rv.setViewVisibility(R.id.quote, View.GONE)
+        }
         rv.setTextViewText(R.id.year, year.toString())
         rv.setViewVisibility(R.id.prev, if (yearIdx > 0) View.VISIBLE else View.INVISIBLE)
         rv.setViewVisibility(R.id.next, if (yearIdx < years.size - 1) View.VISIBLE else View.INVISIBLE)

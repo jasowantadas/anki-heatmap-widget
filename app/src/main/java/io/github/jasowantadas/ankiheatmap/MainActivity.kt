@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -28,6 +29,9 @@ class MainActivity : Activity() {
     private lateinit var permStatus: TextView
     private lateinit var permButton: Button
     private lateinit var pathEdit: EditText
+    private lateinit var quoteUrlEdit: EditText
+    private lateinit var quoteCheck: CheckBox
+    private lateinit var quoteText: TextView
     private lateinit var deckSpinner: Spinner
     private lateinit var statusText: TextView
     private lateinit var heatmap: HeatmapView
@@ -116,6 +120,33 @@ class MainActivity : Activity() {
 
         root.addView(button("Heatmap colour…") { startActivity(Intent(this, ColorPickerActivity::class.java)) })
 
+        root.addView(heading("Motivational quote"))
+        quoteCheck = CheckBox(this).apply {
+            text = "Show a quote on the widget"
+            isChecked = prefs.showQuote
+            setOnCheckedChangeListener { _, checked ->
+                prefs.showQuote = checked
+                refresh(force = false)
+            }
+        }
+        root.addView(quoteCheck)
+        root.addView(text(
+            "Link to your quotes file: a public GitHub gist with one quote per line. " +
+                "Edit the gist any time; the widget picks it up within 3 hours, or straight away when you tap ↻. " +
+                "One quote is shown per day, in order. Leave empty to use the built-in quotes.",
+            13f,
+        ))
+        quoteUrlEdit = EditText(this).apply {
+            setText(prefs.quotesUrl)
+            hint = "https://gist.github.com/…"
+            textSize = 13f
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+        }
+        root.addView(quoteUrlEdit)
+        root.addView(button("Save quote link") { saveSettings() })
+        quoteText = text("", 14f).apply { setTypeface(typeface, android.graphics.Typeface.ITALIC) }
+        root.addView(quoteText)
+
         root.addView(heading("Setup"))
         permStatus = text("", 14f)
         root.addView(permStatus)
@@ -151,6 +182,11 @@ class MainActivity : Activity() {
 
     private fun saveSettings() {
         prefs.collectionPath = pathEdit.text.toString().trim()
+        val url = quoteUrlEdit.text.toString().trim()
+        if (url != prefs.quotesUrl) {
+            prefs.quotesUrl = url
+            prefs.quotesText = ""
+        }
         refresh(force = true)
     }
 
@@ -181,6 +217,7 @@ class MainActivity : Activity() {
         statusText.text = "Loading…"
         thread {
             val s = AnkiRepository.load(this, force)
+            Quotes.refresh(this, force)
             WidgetUpdater.redrawAll(this, s)
             runOnUiThread { show(s) }
         }
@@ -201,6 +238,7 @@ class MainActivity : Activity() {
         heatmapScroll.post { heatmapScroll.fullScroll(View.FOCUS_RIGHT) }
 
         val today = s.today()
+        quoteText.text = Quotes.forDay(this, today)?.let { "Today's quote: \u201C$it\u201D" } ?: ""
         val studied = s.days.values.count { it.reviews > 0 }
         statsText.text = "Today: ${s.count(today)} cards\n" +
             "Daily average: ${s.dailyAverage()} cards\n" +
