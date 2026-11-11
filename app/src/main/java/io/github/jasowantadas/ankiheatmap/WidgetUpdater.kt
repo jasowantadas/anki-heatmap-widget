@@ -210,8 +210,10 @@ object WidgetUpdater {
         var weeks = ((end - start + 1) / 7).toInt()
 
         // Square cells sized to fill the widget.
-        val availW = wDp - 24 - 16 - 4
-        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6
+        // Space taken by everything except the squares (the Oppo version uses a tighter layout).
+        val compact = BuildConfig.FIXED_PORTRAIT_WIDTH_DP > 0
+        val availW = if (compact) wDp - 12 - 16 - 2 else wDp - 24 - 16 - 4
+        val availH = if (compact) hDp - 8 - 22 - 18 - 16 - 16 - 2 else hDp - 24 - 26 - 18 - 20 - 18 - 6
         var step = minOf(availW / weeks, availH / 7)
         if (step < GridSizes.MIN) {
             // Too narrow for a whole year: show the most recent weeks that fit.
