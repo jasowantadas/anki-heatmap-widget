@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cell"
+    android:layout_width="9dp"
+    android:layout_height="9dp"
+    android:paddingEnd="1.5dp"
+    android:paddingBottom="1.5dp"
+    android:scaleType="fitXY"
+    android:src="@drawable/cell_white" />

@@ -19,18 +19,22 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
       - name: Build
-        run: chmod +x gradlew && ./gradlew assembleRelease --stacktrace
-      - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk AnkiHeatmap.apk
+        run: chmod +x gradlew && ./gradlew assembleStandardRelease assembleOppoRelease --stacktrace
+      - name: Rename APKs
+        run: |
+          cp app/build/outputs/apk/standard/release/app-standard-release.apk AnkiHeatmap.apk
+          cp app/build/outputs/apk/oppo/release/app-oppo-release.apk AnkiHeatmap-Oppo.apk
       - uses: actions/upload-artifact@v4
         with:
           name: AnkiHeatmap
-          path: AnkiHeatmap.apk
+          path: AnkiHeatmap*.apk
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: Anki Heatmap build ${{ github.run_number }}
-          body: Download AnkiHeatmap.apk below and open it on your phone to install.
-          files: AnkiHeatmap.apk
+          body: "AnkiHeatmap.apk: normal version (Xiaomi tablet). AnkiHeatmap-Oppo.apk: Oppo tablet version with fixed widths (about 5 in portrait, 8 in landscape)."
+          files: |
+            AnkiHeatmap.apk
+            AnkiHeatmap-Oppo.apk
           make_latest: true
