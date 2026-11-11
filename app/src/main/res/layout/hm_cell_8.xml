@@ -6,4 +6,4 @@
     android:paddingEnd="1.5dp"
     android:paddingBottom="1.5dp"
     android:scaleType="fitXY"
-    android:src="@drawable/cell_l0" />
+    android:src="@drawable/cell_white" />

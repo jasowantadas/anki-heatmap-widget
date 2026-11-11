@@ -26,6 +26,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ColorPickerActivity"
+            android:exported="false"
+            android:label="Heatmap colour" />
+
         <receiver
             android:name=".HeatmapWidget"
             android:exported="false"

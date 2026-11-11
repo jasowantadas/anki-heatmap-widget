@@ -3,7 +3,7 @@
 A GitHub-style home-screen heatmap of your AnkiDroid reviews.
 
 - **Anki heatmap** widget: resizable grid. Tap a square for that day's details, ↻ to refresh, the title to open the app, the bottom line to open AnkiDroid.
-- **Anki today** widget: ring showing today's cards against your daily goal, plus your streak.
+- **Anki today** widget: ring showing today's cards against your daily average, plus your streak.
 - App screen: full-year heatmap, stats, 14-day forecast, deck filter, daily goal.
 
 ## How it works

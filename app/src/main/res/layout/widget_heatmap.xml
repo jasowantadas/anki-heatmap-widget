@@ -52,6 +52,15 @@
             android:textSize="20sp" />
 
         <ImageView
+            android:id="@+id/settings"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="Colours"
+            android:padding="3dp"
+            android:src="@drawable/ic_settings" />
+
+        <ImageView
             android:id="@+id/refresh"
             android:layout_width="26dp"
             android:layout_height="26dp"

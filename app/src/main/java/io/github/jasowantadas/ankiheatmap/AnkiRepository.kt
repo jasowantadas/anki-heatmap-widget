@@ -43,7 +43,7 @@ class Stats(
     fun daysLearned(): Int = days.values.count { it.reviews > 0 }
 
     /** Average cards per day on the days you studied. */
-    fun dailyAverage(): Int = daysLearned().let { if (it == 0) 0 else totalReviews() / it }
+    fun dailyAverage(): Int = daysLearned().let { if (it == 0) 0 else Math.round(totalReviews().toFloat() / it) }
 
     /** % of days since your first review on which you studied. */
     fun daysLearnedPercent(): Int {

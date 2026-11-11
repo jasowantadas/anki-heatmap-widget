@@ -28,7 +28,6 @@ class MainActivity : Activity() {
     private lateinit var permStatus: TextView
     private lateinit var permButton: Button
     private lateinit var pathEdit: EditText
-    private lateinit var goalEdit: EditText
     private lateinit var deckSpinner: Spinner
     private lateinit var statusText: TextView
     private lateinit var heatmap: HeatmapView
@@ -115,12 +114,7 @@ class MainActivity : Activity() {
         deckSpinner = Spinner(this)
         root.addView(deckSpinner)
 
-        root.addView(text("Daily goal (cards). The square turns brightest green when you reach it.", 13f))
-        goalEdit = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER
-            setText(prefs.goal.toString())
-        }
-        root.addView(goalEdit)
+        root.addView(button("Heatmap colour…") { startActivity(Intent(this, ColorPickerActivity::class.java)) })
 
         root.addView(heading("Setup"))
         permStatus = text("", 14f)
@@ -147,7 +141,7 @@ class MainActivity : Activity() {
         root.addView(heading("Widgets"))
         root.addView(text(
             "Long-press your home screen → Widgets → Anki Heatmap. Add \"Anki heatmap\" (resizable grid) " +
-                "and/or \"Anki today\" (goal ring and streak). On the grid: tap a square for that day, ↻ to refresh, " +
+                "and/or \"Anki today\" (today's cards against your daily average, and your streak). On the grid: tap a square for that day, ↻ to refresh, " +
                 "the title to open this app, and the bottom line to open AnkiDroid.",
             13f,
         ))
@@ -157,8 +151,6 @@ class MainActivity : Activity() {
 
     private fun saveSettings() {
         prefs.collectionPath = pathEdit.text.toString().trim()
-        prefs.goal = goalEdit.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: prefs.goal
-        goalEdit.setText(prefs.goal.toString())
         refresh(force = true)
     }
 
@@ -196,7 +188,6 @@ class MainActivity : Activity() {
 
     private fun show(s: Stats?) {
         current = s
-        val goal = prefs.goal
         if (s == null) {
             statusText.text = "No data yet."
             return
@@ -204,14 +195,16 @@ class MainActivity : Activity() {
         val updated = if (s.loadedAt > 0) DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(s.loadedAt)) else "never"
         statusText.text = (s.error?.let { "⚠ $it\n" } ?: "") + "Last read from AnkiDroid: $updated"
 
-        heatmap.goal = goal
+        heatmap.palette = Levels.palette(prefs.baseColor)
         heatmap.stats = s
         heatmap.requestLayout()
         heatmapScroll.post { heatmapScroll.fullScroll(View.FOCUS_RIGHT) }
 
         val today = s.today()
         val studied = s.days.values.count { it.reviews > 0 }
-        statsText.text = "Today: ${s.count(today)} cards (goal $goal)\n" +
+        statsText.text = "Today: ${s.count(today)} cards\n" +
+            "Daily average: ${s.dailyAverage()} cards\n" +
+            "Days learned: ${s.daysLearnedPercent()}%\n" +
             "Current streak: ${s.currentStreak()} days\n" +
             "Best streak: ${s.bestStreak()} days\n" +
             "Days studied: $studied\n" +

@@ -19,7 +19,7 @@ class HeatmapView(context: Context) : View(context) {
             field = value
             invalidate()
         }
-    var goal: Int = 100
+    var palette: IntArray = Levels.palette(Levels.DEFAULT_BASE)
         set(value) {
             field = value
             invalidate()
@@ -83,7 +83,7 @@ class HeatmapView(context: Context) : View(context) {
                 val x = left + w * step
                 val y = top + d * step
                 rect.set(x, y, x + cell, y + cell)
-                fill.color = Levels.COLORS[Levels.level(stats?.count(day) ?: 0, goal)]
+                fill.color = Levels.color(Levels.level(stats?.count(day) ?: 0, stats?.dailyAverage() ?: 0), palette)
                 canvas.drawRoundRect(rect, radius, radius, fill)
                 if (day == selected) canvas.drawRoundRect(rect, radius, radius, outline)
             }

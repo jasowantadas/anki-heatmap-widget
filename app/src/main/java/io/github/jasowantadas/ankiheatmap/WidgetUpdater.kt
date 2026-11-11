@@ -157,7 +157,8 @@ object WidgetUpdater {
     fun buildHeatmap(context: Context, mgr: AppWidgetManager, id: Int, s: Stats?): RemoteViews {
         val pkg = context.packageName
         val prefs = Prefs(context)
-        val goal = prefs.goal
+        val average = s?.dailyAverage() ?: 0
+        val palette = Levels.palette(prefs.baseColor)
         val rv = RemoteViews(pkg, R.layout.widget_heatmap)
 
         val today = s?.today() ?: AnkiDay.epochDay(System.currentTimeMillis(), 4)
@@ -218,19 +219,24 @@ object WidgetUpdater {
             val col = RemoteViews(pkg, R.layout.widget_col)
             for (d in 0 until 7) {
                 val day = start + week * 7L + d
-                val cell = RemoteViews(pkg, GridSizes.CELL[si])
+                val cell: RemoteViews
                 if (day < jan1 || day > dec31) {
+                    cell = RemoteViews(pkg, GridSizes.CELL[si])
                     cell.setImageViewResource(R.id.cell, R.drawable.cell_blank)
                 } else if (day > today) {
+                    cell = RemoteViews(pkg, GridSizes.CELL[si])
                     cell.setImageViewResource(R.id.cell, R.drawable.cell_future)
                 } else {
-                    val level = Levels.level(s?.count(day) ?: 0, goal)
-                    val res = when (day) {
-                        selected -> Levels.SELECTED_CELLS[level]
-                        today -> Levels.TODAY_CELLS[level]
-                        else -> Levels.CELLS[level]
+                    val color = Levels.color(Levels.level(s?.count(day) ?: 0, average), palette)
+                    if (day == selected || day == today) {
+                        // Outlined square: white for the tapped day, grey for today.
+                        cell = RemoteViews(pkg, GridSizes.MARK[si])
+                        cell.setInt(R.id.ring, "setColorFilter", if (day == selected) 0xFFFFFFFF.toInt() else 0xFFB4B2A9.toInt())
+                        cell.setInt(R.id.fill, "setColorFilter", color)
+                    } else {
+                        cell = RemoteViews(pkg, GridSizes.CELL[si])
+                        cell.setInt(R.id.cell, "setColorFilter", color)
                     }
-                    cell.setImageViewResource(R.id.cell, res)
                     cell.setOnClickPendingIntent(R.id.cell, selectIntent(context, id, day))
                 }
                 col.addView(R.id.col, cell)
@@ -249,21 +255,26 @@ object WidgetUpdater {
             s.error != null -> s.error
             selected >= 0 -> Levels.reviewedOn(selected, s.count(selected))
             year != currentYear -> "$year: ${(jan1..dec31).sumOf { s.count(it) }} cards reviewed in total"
-            else -> "Today: ${s.count(today)} cards reviewed · goal $goal"
+            else -> "Today: ${s.count(today)} cards reviewed"
         }
         rv.setTextViewText(R.id.info, info)
         rv.setTextViewText(R.id.stats, if (s == null) "" else statsLine(s))
         rv.setOnClickPendingIntent(R.id.title, openAppIntent(context))
         rv.setOnClickPendingIntent(R.id.stats, openAnkiIntent(context))
+        rv.setOnClickPendingIntent(
+            R.id.settings,
+            PendingIntent.getActivity(context, 6, Intent(context, ColorPickerActivity::class.java), FLAGS),
+        )
         rv.setOnClickPendingIntent(R.id.refresh, refreshIntent(context, HeatmapWidget::class.java))
         return rv
     }
 
     fun buildToday(context: Context, s: Stats?): RemoteViews {
-        val goal = Prefs(context).goal
+        val average = s?.dailyAverage() ?: 0
+        val base = Prefs(context).baseColor
         val rv = RemoteViews(context.packageName, R.layout.widget_today)
         val count = s?.let { it.count(it.today()) } ?: 0
-        rv.setImageViewBitmap(R.id.ring, ring(count, goal))
+        rv.setImageViewBitmap(R.id.ring, ring(count, average, base))
         rv.setTextViewText(R.id.streak, streakText(s))
         rv.setTextViewText(
             R.id.sub,
@@ -278,7 +289,7 @@ object WidgetUpdater {
         return rv
     }
 
-    private fun ring(count: Int, goal: Int): Bitmap {
+    private fun ring(count: Int, average: Int, base: Int): Bitmap {
         val size = 240
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
@@ -289,11 +300,11 @@ object WidgetUpdater {
             strokeCap = Paint.Cap.ROUND
         }
         val r = RectF(stroke / 2 + 2, stroke / 2 + 2, size - stroke / 2 - 2, size - stroke / 2 - 2)
-        p.color = Levels.COLORS[0]
+        p.color = Levels.EMPTY
         c.drawArc(r, 0f, 360f, false, p)
-        val frac = if (goal <= 0) 1f else (count.toFloat() / goal).coerceAtMost(1f)
+        val frac = if (average <= 0) (if (count > 0) 1f else 0f) else (count.toFloat() / average).coerceAtMost(1f)
         if (frac > 0f) {
-            p.color = Levels.COLORS[4]
+            p.color = base
             c.drawArc(r, -90f, 360f * frac, false, p)
         }
         val t = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -306,7 +317,7 @@ object WidgetUpdater {
         t.textSize = size * 0.1f
         t.isFakeBoldText = false
         t.color = 0xFFB4B2A9.toInt()
-        c.drawText("of $goal", size / 2f, size / 2f + size * 0.2f, t)
+        c.drawText(if (average > 0) "avg $average" else "today", size / 2f, size / 2f + size * 0.2f, t)
         return bmp
     }
 }

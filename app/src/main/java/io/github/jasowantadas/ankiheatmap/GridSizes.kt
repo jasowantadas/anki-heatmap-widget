@@ -33,6 +33,34 @@ object GridSizes {
         R.layout.hm_cell_28,
     )
 
+    val MARK = intArrayOf(
+        R.layout.hm_mark_4,
+        R.layout.hm_mark_5,
+        R.layout.hm_mark_6,
+        R.layout.hm_mark_7,
+        R.layout.hm_mark_8,
+        R.layout.hm_mark_9,
+        R.layout.hm_mark_10,
+        R.layout.hm_mark_11,
+        R.layout.hm_mark_12,
+        R.layout.hm_mark_13,
+        R.layout.hm_mark_14,
+        R.layout.hm_mark_15,
+        R.layout.hm_mark_16,
+        R.layout.hm_mark_17,
+        R.layout.hm_mark_18,
+        R.layout.hm_mark_19,
+        R.layout.hm_mark_20,
+        R.layout.hm_mark_21,
+        R.layout.hm_mark_22,
+        R.layout.hm_mark_23,
+        R.layout.hm_mark_24,
+        R.layout.hm_mark_25,
+        R.layout.hm_mark_26,
+        R.layout.hm_mark_27,
+        R.layout.hm_mark_28,
+    )
+
     val SPACE = intArrayOf(
         R.layout.hm_space_4,
         R.layout.hm_space_5,

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cell"
+    android:layout_width="19dp"
+    android:layout_height="19dp"
+    android:paddingEnd="3.5dp"
+    android:paddingBottom="3.5dp">
+
+    <ImageView
+        android:id="@+id/ring"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/cell_white" />
+
+    <ImageView
+        android:id="@+id/fill"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="1.5dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/cell_white" />
+</FrameLayout>

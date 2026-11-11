@@ -10,9 +10,10 @@ class Prefs(context: Context) {
         get() = sp.getString("path", null) ?: DEFAULT_PATH
         set(value) = sp.edit().putString("path", value).apply()
 
-    var goal: Int
-        get() = sp.getInt("goal", 100)
-        set(value) = sp.edit().putInt("goal", value).apply()
+    /** Middle shade of the heatmap, picked by the user. */
+    var baseColor: Int
+        get() = sp.getInt("base_color", Levels.DEFAULT_BASE)
+        set(value) = sp.edit().putInt("base_color", value).apply()
 
     /** Deck name ("Parent::Child"); empty = all decks. */
     var deck: String
