@@ -12,6 +12,8 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
+import android.util.SizeF
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -38,7 +40,6 @@ object WidgetUpdater {
             for (id in mgr.getAppWidgetIds(ComponentName(context, HeatmapWidget::class.java))) prefs.setSelectedDay(id, -1L)
         }
         val stats = AnkiRepository.load(context, force)
-        Quotes.refresh(context, force)
         redrawAll(context, stats)
     }
 
@@ -137,8 +138,12 @@ object WidgetUpdater {
         return Pair(if (w > 0) w else 300, if (h > 0) h else 180)
     }
 
-    private fun statsLine(s: Stats): CharSequence {
-        val green = 0xFF97C459.toInt()
+    /** Accent for text: a lighter shade of the chosen colour, readable on the dark widget. */
+    private fun accent(context: Context): Int = Levels.palette(Prefs(context).baseColor)[6]
+
+    private fun days(n: Int) = if (n == 1) "1 day" else "$n days"
+
+    private fun statsLine(s: Stats, green: Int): CharSequence {
         val b = SpannableStringBuilder()
         fun part(label: String, value: String, last: Boolean = false) {
             b.append(label)
@@ -150,16 +155,35 @@ object WidgetUpdater {
         }
         part("Daily average: ", "${s.dailyAverage()} cards")
         part("Days learned: ", "${s.daysLearnedPercent()}%")
-        part("Longest streak: ", "${s.bestStreak()} days")
-        part("Current streak: ", "${s.currentStreak()} days", last = true)
+        part("Longest streak: ", days(s.bestStreak()))
+        part("Current streak: ", days(s.currentStreak()), last = true)
         return b
     }
 
     fun buildHeatmap(context: Context, mgr: AppWidgetManager, id: Int, s: Stats?): RemoteViews {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            @Suppress("DEPRECATION")
+            val sizes = mgr.getAppWidgetOptions(id)
+                .getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+                ?.filter { it.width > 0 && it.height > 0 }
+                ?.distinctBy { Pair(it.width.toInt(), it.height.toInt()) }
+                ?.take(4)
+            if (!sizes.isNullOrEmpty()) {
+                if (sizes.size == 1) {
+                    return buildHeatmapSized(context, id, s, sizes[0].width.toInt(), sizes[0].height.toInt())
+                }
+                return RemoteViews(sizes.associateWith { buildHeatmapSized(context, id, s, it.width.toInt(), it.height.toInt()) })
+            }
+        }
+        val (wDp, hDp) = widgetSizeDp(context, mgr, id)
+        return buildHeatmapSized(context, id, s, wDp, hDp)
+    }
+
+    private fun buildHeatmapSized(context: Context, id: Int, s: Stats?, wDp: Int, hDp: Int): RemoteViews {
         val pkg = context.packageName
         val prefs = Prefs(context)
         val average = s?.dailyAverage() ?: 0
-        val palette = Levels.palette(Levels.DEFAULT_BASE)
+        val palette = Levels.palette(prefs.baseColor)
         val rv = RemoteViews(pkg, R.layout.widget_heatmap)
 
         val today = s?.today() ?: AnkiDay.epochDay(System.currentTimeMillis(), 4)
@@ -176,10 +200,8 @@ object WidgetUpdater {
         var weeks = ((end - start + 1) / 7).toInt()
 
         // Square cells sized to fill the widget.
-        val (wDp, hDp) = widgetSizeDp(context, mgr, id)
         val availW = wDp - 24 - 16 - 4
-        val quote = Quotes.forDay(context, today)
-        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6 - (if (quote != null) 16 else 0)
+        val availH = hDp - 24 - 26 - 18 - 20 - 18 - 6
         var step = minOf(availW / weeks, availH / 7)
         if (step < GridSizes.MIN) {
             // Too narrow for a whole year: show the most recent weeks that fit.
@@ -246,18 +268,6 @@ object WidgetUpdater {
             rv.addView(R.id.grid, col)
         }
 
-        // Title: today's quote (centred) if there is one, otherwise "Anki reviews".
-        if (quote != null) {
-            rv.setViewVisibility(R.id.title, View.GONE)
-            rv.setViewVisibility(R.id.quote, View.VISIBLE)
-            rv.setViewVisibility(R.id.quote_spacer, if (wDp >= 480) View.VISIBLE else View.GONE)
-            rv.setTextViewText(R.id.quote, "\u201C$quote\u201D")
-            rv.setOnClickPendingIntent(R.id.quote, openAppIntent(context))
-        } else {
-            rv.setViewVisibility(R.id.title, View.VISIBLE)
-            rv.setViewVisibility(R.id.quote, View.GONE)
-            rv.setViewVisibility(R.id.quote_spacer, View.GONE)
-        }
         rv.setTextViewText(R.id.year, year.toString())
         rv.setViewVisibility(R.id.prev, if (yearIdx > 0) View.VISIBLE else View.INVISIBLE)
         rv.setViewVisibility(R.id.next, if (yearIdx < years.size - 1) View.VISIBLE else View.INVISIBLE)
@@ -272,26 +282,31 @@ object WidgetUpdater {
             else -> "Today: ${s.count(today)} cards reviewed"
         }
         rv.setTextViewText(R.id.info, info)
-        rv.setTextViewText(R.id.stats, if (s == null) "" else statsLine(s))
+        rv.setTextViewText(R.id.stats, if (s == null) "" else statsLine(s, accent(context)))
         rv.setOnClickPendingIntent(R.id.title, openAppIntent(context))
         rv.setOnClickPendingIntent(R.id.stats, openAnkiIntent(context))
+        rv.setOnClickPendingIntent(
+            R.id.settings,
+            PendingIntent.getActivity(context, 6, Intent(context, ColorPickerActivity::class.java), FLAGS),
+        )
         rv.setOnClickPendingIntent(R.id.refresh, refreshIntent(context, HeatmapWidget::class.java))
         return rv
     }
 
     fun buildToday(context: Context, s: Stats?): RemoteViews {
         val average = s?.dailyAverage() ?: 0
-        val base = Levels.DEFAULT_BASE
+        val base = Prefs(context).baseColor
         val rv = RemoteViews(context.packageName, R.layout.widget_today)
         val count = s?.let { it.count(it.today()) } ?: 0
         rv.setImageViewBitmap(R.id.ring, ring(count, average, base))
         rv.setTextViewText(R.id.streak, streakText(s))
+        rv.setTextColor(R.id.streak, accent(context))
         rv.setTextViewText(
             R.id.sub,
             when {
                 s == null -> "Open the app to set up"
                 s.error != null -> "Open the app"
-                else -> "Best: ${s.bestStreak()} days"
+                else -> "Best: ${days(s.bestStreak())}"
             },
         )
         rv.setOnClickPendingIntent(R.id.root, openAnkiIntent(context))
